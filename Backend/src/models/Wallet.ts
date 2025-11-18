@@ -69,11 +69,9 @@ const walletSchema = new Schema<IWallet>(
   }
 );
 
-// Compound index for user's wallets
 walletSchema.index({ userId: 1, createdAt: -1 });
 walletSchema.index({ userId: 1, name: 1 });
 
-// Pre-save hook to set balance to initialBalance if not explicitly set
 walletSchema.pre("save", function (next) {
   if (this.isNew && this.balance === 0 && this.initialBalance !== 0) {
     this.balance = this.initialBalance;
