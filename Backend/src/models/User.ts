@@ -16,7 +16,6 @@ const userSchema = new Schema<IUser>(
       required: [true, "Google ID is required"],
       unique: true,
       trim: true,
-      index: true,
     },
     name: {
       type: String,
@@ -35,7 +34,6 @@ const userSchema = new Schema<IUser>(
         /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
         "Please provide a valid email address",
       ],
-      index: true,
     },
   },
   {
@@ -43,10 +41,6 @@ const userSchema = new Schema<IUser>(
     versionKey: false,
   }
 );
-
-// Index for faster queries
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 });
 
 const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);
 
