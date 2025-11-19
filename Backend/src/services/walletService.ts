@@ -1,4 +1,5 @@
 import Wallet, { IWallet, WalletType } from "../models/Wallet";
+import Transaction from "../models/Transaction";
 import { AppError } from "../middleware/errorHandler";
 import mongoose from "mongoose";
 
@@ -69,6 +70,9 @@ export class WalletService {
 
   static async deleteWallet(walletId: string, userId: string): Promise<void> {
     const wallet = await this.getWalletById(walletId, userId);
+
+    await Transaction.deleteMany({ walletId: wallet._id });
+
     await wallet.deleteOne();
   }
 

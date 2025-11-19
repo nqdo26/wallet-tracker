@@ -6,23 +6,36 @@
 
 ### Frontend
 
-- React 19 + TypeScript
-- Ant Design
+- React 18 + TypeScript
+- Ant Design 5
 - Vite
 - Axios
-- React Router
+- React Router v6
+- pdfmake (PDF export)
 
 ### Backend
 
 - Node.js + Express + TypeScript
 - MongoDB + Mongoose
-- Passport.js (Google OAuth)
+- Passport.js (Google OAuth 2.0)
 - JWT Authentication
+- express-validator
 
 ### Deployment
 
 - Docker & Docker Compose
 - Nginx
+
+## Tính năng
+
+- ✅ Đăng nhập Google OAuth 2.0
+- ✅ Quản lý nhiều ví (Multi-wallet)
+- ✅ Quản lý giao dịch thu/chi
+- ✅ Báo cáo chi tiết theo ví và thời gian
+- ✅ Xuất báo cáo PDF (tiếng Việt)
+- ✅ Tự động tính số dư sau mỗi giao dịch
+- ✅ Bắt buộc tạo ví đầu tiên khi đăng ký
+- ✅ Responsive design
 
 ## Cấu trúc dự án
 
@@ -41,7 +54,6 @@ wallet-tracker/
 │   │   ├── utils/          # Helper functions
 │   │   ├── app.ts          # Express app
 │   │   └── server.ts       # Entry point
-│   ├── .env.example
 │   ├── Dockerfile
 │   ├── nodemon.json
 │   ├── package.json
@@ -49,18 +61,16 @@ wallet-tracker/
 │
 ├── Frontend/
 │   ├── src/
+│   │   ├── api/            # API clients
 │   │   ├── components/     # React components
-│   │   │   ├── common/    # Reusable components
-│   │   │   └── layout/    # Layout components
+│   │   │   ├── common/     # Reusable components
+│   │   │   └── layout/     # Layout components
 │   │   ├── context/        # React context
-│   │   ├── hooks/          # Custom hooks
 │   │   ├── pages/          # Page components
-│   │   ├── services/       # API services
 │   │   ├── types/          # TypeScript types
 │   │   ├── utils/          # Helper functions
 │   │   ├── App.tsx
 │   │   └── main.tsx
-│   ├── .env.example
 │   ├── Dockerfile
 │   ├── nginx.conf
 │   ├── package.json
@@ -70,69 +80,110 @@ wallet-tracker/
 └── README.md
 ```
 
-## Cài đặt
+## Yêu cầu hệ thống
 
-### Yêu cầu
+- Docker & Docker Compose
+- Google OAuth 2.0 Credentials
 
-- Node.js 20+
-- MongoDB (hoặc Docker)
-- Google OAuth credentials
+## Cài đặt và chạy với Docker
 
-### Development
+### Bước 1: Tạo Google OAuth Credentials
 
-1. Clone repository
+1. Truy cập [Google Cloud Console](https://console.cloud.google.com/)
+2. Tạo project mới hoặc chọn project có sẵn
+3. Vào **APIs & Services** → **Credentials**
+4. Click **Create Credentials** → **OAuth 2.0 Client ID**
+5. Nếu chưa có OAuth consent screen, hãy cấu hình:
+   - User Type: **External**
+   - App name: `Wallet Tracker`
+   - Support email: your-email@gmail.com
+   - Developer contact: your-email@gmail.com
+   - Save and continue (để mặc định các bước còn lại)
+6. Quay lại **Credentials**, tạo **OAuth 2.0 Client ID**:
+   - Application type: **Web application**
+   - Name: `Wallet Tracker`
+   - **Authorized JavaScript origins**:
+     ```
+     http://localhost:3000
+     ```
+   - **Authorized redirect URIs**:
+     ```
+     http://localhost:5000/api/auth/google/callback
+     ```
+   - Click **Create**
+7. Copy **Client ID** và **Client Secret**
+
+### Bước 2: Tạo file `.env`
+
+Tạo file `.env` ở thư mục gốc (`wallet-tracker/.env`):
+
+```env
+GOOGLE_CLIENT_ID=paste-your-client-id-here
+GOOGLE_CLIENT_SECRET=paste-your-client-secret-here
+```
+
+### Bước 3: Chạy Docker
 
 ```bash
 git clone https://github.com/nqdo26/wallet-tracker.git
 cd wallet-tracker
+docker-compose up --build
 ```
 
-2. Cài đặt dependencies
+### Bước 4: Truy cập ứng dụng
 
-Backend:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:5000/api
+- **MongoDB**: localhost:27017
+
+Click **"Đăng nhập với Google"** để bắt đầu!
+
+## Development (Không dùng Docker)
+
+### Yêu cầu
+
+- Node.js 20+
+- MongoDB chạy local hoặc MongoDB Atlas
+
+### Backend
 
 ```bash
 cd Backend
 npm install
-cp .env
-# Cập nhật .env với credentials của bạn
+
+# Tạo file .env
+cat > .env << EOF
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=mongodb://localhost:27017/wallet-tracker
+FRONTEND_URL=http://localhost:5173
+JWT_SECRET=your-jwt-secret-key
+JWT_EXPIRES_IN=7d
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
+SESSION_SECRET=your-session-secret
+EOF
+
+npm run dev
 ```
 
-Frontend:
+### Frontend
 
 ```bash
 cd Frontend
 npm install
-cp .env
-# Cập nhật .env với API URL
-```
 
-3. Chạy development
+# Tạo file .env
+cat > .env << EOF
+VITE_API_URL=http://localhost:5000/api
+VITE_GOOGLE_CLIENT_ID=your-google-client-id
+EOF
 
-Backend:
-
-```bash
-cd Backend
 npm run dev
 ```
 
-Frontend:
-
-```bash
-cd Frontend
-npm run dev
-```
-
-### Production với Docker
-
-```bash
-# Tạo file .env trong Backend/
-cp Backend/.env.example Backend/.env
-# Cập nhật credentials
-
-# Build và chạy
-docker-compose up -d
-```
+Frontend sẽ chạy tại: http://localhost:5173
 
 ## API Endpoints
 
@@ -148,19 +199,53 @@ docker-compose up -d
 - `POST /api/wallets` - Tạo ví mới
 - `GET /api/wallets/:id` - Lấy chi tiết ví
 - `PUT /api/wallets/:id` - Cập nhật ví
-- `DELETE /api/wallets/:id` - Xóa ví
+- `DELETE /api/wallets/:id` - Xóa ví (và tất cả giao dịch liên quan)
 
 ### Transactions
 
-- `GET /api/transactions` - Lấy danh sách giao dịch
+- `GET /api/transactions?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD` - Lấy danh sách giao dịch theo khoảng thời gian
 - `POST /api/transactions` - Tạo giao dịch mới
-- `GET /api/transactions/:id` - Lấy chi tiết giao dịch
-- `PUT /api/transactions/:id` - Cập nhật giao dịch
 - `DELETE /api/transactions/:id` - Xóa giao dịch
 
-### Reports
+### Statements (Reports)
 
-- `GET /api/reports/statement` - Lấy báo cáo sao kê theo ví và khoảng thời gian
+- `GET /api/statements/wallet/:walletId?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD` - Lấy sổ giao dịch của ví
+
+## Troubleshooting
+
+### Lỗi Google OAuth: "redirect_uri_mismatch"
+
+- Kiểm tra redirect URI phải chính xác: `http://localhost:5000/api/auth/google/callback`
+- Không có dấu `/` ở cuối
+- Đảm bảo port đúng (5000 cho backend)
+
+### Lỗi: "Access blocked: This app's request is invalid"
+
+- Thêm email test của bạn vào **Test users** trong OAuth consent screen
+- Hoặc publish app (chọn In production)
+
+### Docker build lỗi
+
+```bash
+# Xóa container và volume cũ
+docker-compose down -v
+
+# Build lại
+docker-compose up --build
+```
+
+### Không thể đăng nhập
+
+- Kiểm tra file `.env` đã tạo đúng chưa
+- Kiểm tra GOOGLE_CLIENT_ID và GOOGLE_CLIENT_SECRET đúng chưa
+- Xem logs: `docker-compose logs backend`
+
+## Lưu ý
+
+- File `.env` **KHÔNG** được commit lên GitHub (đã có trong `.gitignore`)
+- Dữ liệu MongoDB được lưu trong Docker volume `mongodb_data`
+- Để xóa dữ liệu: `docker-compose down -v`
+- Google OAuth credentials chỉ dùng cho local development
 
 ## License
 

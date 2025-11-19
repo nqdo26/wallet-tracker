@@ -7,7 +7,7 @@ import {
   Input,
   InputNumber,
   Select,
-  message,
+  notification,
   Space,
   Tag,
   Popconfirm,
@@ -37,6 +37,17 @@ export const WalletsPage = () => {
 
   useEffect(() => {
     fetchWallets();
+
+    // Listen for wallet created event from FirstWalletSetup
+    const handleWalletCreated = () => {
+      fetchWallets();
+    };
+
+    window.addEventListener("wallet-created", handleWalletCreated);
+
+    return () => {
+      window.removeEventListener("wallet-created", handleWalletCreated);
+    };
   }, []);
 
   const fetchWallets = async () => {
@@ -44,8 +55,18 @@ export const WalletsPage = () => {
       setLoading(true);
       const data = await walletApi.getAll();
       setWallets(data);
-    } catch (error) {
-      message.error("Không thể tải danh sách ví");
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Không thể tải danh sách ví";
+      notification.error({
+        message: "Lỗi tải danh sách ví",
+        description: errorMessage,
+        duration: 5,
+        placement: "topRight",
+      });
     } finally {
       setLoading(false);
     }
@@ -78,27 +99,57 @@ export const WalletsPage = () => {
           name: values.name,
           type: values.type,
         });
-        message.success("Cập nhật ví thành công");
+        notification.success({
+          message: "Thành công",
+          description: "Cập nhật ví thành công",
+          placement: "topRight",
+        });
       } else {
         await walletApi.create(values);
-        message.success("Tạo ví mới thành công");
+        notification.success({
+          message: "Thành công",
+          description: "Tạo ví mới thành công",
+          placement: "topRight",
+        });
       }
       handleCloseModal();
       fetchWallets();
-    } catch (error) {
-      message.error(
-        editingWallet ? "Không thể cập nhật ví" : "Không thể tạo ví mới"
-      );
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        (editingWallet ? "Không thể cập nhật ví" : "Không thể tạo ví mới");
+      notification.error({
+        message: editingWallet ? "Lỗi cập nhật ví" : "Lỗi tạo ví",
+        description: errorMessage,
+        duration: 6,
+        placement: "topRight",
+      });
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await walletApi.delete(id);
-      message.success("Xóa ví thành công");
+      notification.success({
+        message: "Thành công",
+        description: "Xóa ví thành công",
+        placement: "topRight",
+      });
       fetchWallets();
-    } catch (error) {
-      message.error("Không thể xóa ví");
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Không thể xóa ví";
+      notification.error({
+        message: "Lỗi xóa ví",
+        description: errorMessage,
+        duration: 6,
+        placement: "topRight",
+      });
     }
   };
 
@@ -129,10 +180,12 @@ export const WalletsPage = () => {
       title: "Tên ví",
       dataIndex: "name",
       key: "name",
+      width: 200,
+      fixed: "left",
       render: (name: string) => (
         <Space>
-          <WalletOutlined />
-          <strong>{name}</strong>
+          <WalletOutlined style={{ fontSize: "16px", color: "#1890ff" }} />
+          <strong style={{ fontSize: "14px" }}>{name}</strong>
         </Space>
       ),
     },
@@ -140,8 +193,11 @@ export const WalletsPage = () => {
       title: "Loại",
       dataIndex: "type",
       key: "type",
+      width: 140,
       render: (type: WalletType) => (
-        <Tag color={getWalletTypeColor(type)}>{getWalletTypeName(type)}</Tag>
+        <Tag color={getWalletTypeColor(type)} style={{ fontSize: "13px" }}>
+          {getWalletTypeName(type)}
+        </Tag>
       ),
     },
     {
@@ -149,15 +205,24 @@ export const WalletsPage = () => {
       dataIndex: "initialBalance",
       key: "initialBalance",
       align: "right",
-      render: (amount: number) => formatCurrency(amount),
+      width: 160,
+      render: (amount: number) => (
+        <span style={{ fontSize: "14px" }}>{formatCurrency(amount)}</span>
+      ),
     },
     {
       title: "Số dư hiện tại",
       dataIndex: "balance",
       key: "balance",
       align: "right",
+      width: 160,
       render: (amount: number) => (
-        <strong style={{ color: amount >= 0 ? "#52c41a" : "#ff4d4f" }}>
+        <strong
+          style={{
+            color: amount >= 0 ? "#52c41a" : "#ff4d4f",
+            fontSize: "15px",
+          }}
+        >
           {formatCurrency(amount)}
         </strong>
       ),
@@ -166,22 +231,26 @@ export const WalletsPage = () => {
       title: "Ngày bắt đầu",
       dataIndex: "startDate",
       key: "startDate",
-      render: (date: string) => formatDate(date),
+      width: 130,
+      align: "right",
+      render: (date: string) => (
+        <span style={{ fontSize: "14px" }}>{formatDate(date)}</span>
+      ),
     },
     {
       title: "Thao tác",
       key: "action",
       align: "center",
-      width: 150,
+      width: 120,
+      fixed: "right",
       render: (_, record: Wallet) => (
-        <Space>
+        <Space size="small">
           <Button
-            type="link"
+            type="text"
             icon={<EditOutlined />}
             onClick={() => handleOpenModal(record)}
-          >
-            Sửa
-          </Button>
+            style={{ color: "#1890ff" }}
+          />
           <Popconfirm
             title="Xóa ví"
             description="Bạn có chắc chắn muốn xóa ví này?"
@@ -189,9 +258,7 @@ export const WalletsPage = () => {
             okText="Xóa"
             cancelText="Hủy"
           >
-            <Button type="link" danger icon={<DeleteOutlined />}>
-              Xóa
-            </Button>
+            <Button type="text" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
       ),
@@ -245,9 +312,18 @@ export const WalletsPage = () => {
           dataSource={wallets}
           rowKey="id"
           loading={loading}
+          bordered
+          size="middle"
+          scroll={{ x: 800 }}
           pagination={{
             pageSize: 10,
             showTotal: (total) => `Tổng ${total} ví`,
+            showSizeChanger: true,
+            pageSizeOptions: [10, 20, 50],
+          }}
+          style={{
+            backgroundColor: "#fff",
+            borderRadius: "8px",
           }}
         />
 

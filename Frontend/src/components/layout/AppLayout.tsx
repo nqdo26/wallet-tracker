@@ -9,6 +9,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { FirstWalletSetup } from "../common/FirstWalletSetup";
 
 const { Header, Content, Sider } = Layout;
 
@@ -21,6 +22,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [walletSetupKey, setWalletSetupKey] = useState(0);
 
   useEffect(() => {
     const handleResize = () => {
@@ -73,8 +75,16 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
     },
   ];
 
+  const handleWalletCreated = () => {
+    setWalletSetupKey((prev) => prev + 1);
+  };
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
+      <FirstWalletSetup
+        key={walletSetupKey}
+        onWalletCreated={handleWalletCreated}
+      />
       <Header
         style={{
           display: "flex",
