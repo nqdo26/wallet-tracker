@@ -32,9 +32,8 @@
 - ✅ Quản lý nhiều ví (Multi-wallet)
 - ✅ Quản lý giao dịch thu/chi
 - ✅ Báo cáo chi tiết theo ví và thời gian
-- ✅ Xuất báo cáo PDF (tiếng Việt)
+- ✅ Xuất báo cáo PDF
 - ✅ Tự động tính số dư sau mỗi giao dịch
-- ✅ Bắt buộc tạo ví đầu tiên khi đăng ký
 - ✅ Responsive design
 
 ## Cấu trúc dự án
@@ -250,3 +249,4 @@ docker-compose up --build
 ## License
 
 MIT
+
